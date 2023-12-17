@@ -40,7 +40,7 @@ export TF_VAR_yc_token=$YC_TOKEN
 
 Скачиваем проект с гитхаба:
 ```
-git clone https://github.com/SergSha/lab-11.git && cd ./lab-11
+git clone https://github.com/SergSha/lab-12.git && cd ./lab-12
 ```
 
 В файле provider.tf нужно вставить свой 'cloud_id':
