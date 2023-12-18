@@ -66,3 +66,49 @@ terraform init && terraform apply -auto-approve
 По завершению команды получим данные outputs:
 ```
 Outputs:
+
+
+
+Список kubernetes кластеров:
+```
+[user@redos lab-12]$ yc managed-kubernetes cluster list
++----------------------+---------+---------------------+---------+---------+------------------------+---------------------+
+|          ID          |  NAME   |     CREATED AT      | HEALTH  | STATUS  |   EXTERNAL ENDPOINT    |  INTERNAL ENDPOINT  |
++----------------------+---------+---------------------+---------+---------+------------------------+---------------------+
+| catsn44eokd4kqbc0apg | k8s-lab | 2023-12-18 07:47:40 | HEALTHY | RUNNING | https://158.160.25.182 | https://10.10.10.22 |
++----------------------+---------+---------------------+---------+---------+------------------------+---------------------+
+
+[user@redos lab-12]$ 
+```
+
+Установка с помощью встроенного пакетного менеджера:
+```
+# This overwrites any existing configuration in /etc/yum.repos.d/kubernetes.repo
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key
+EOF
+sudo dnf install -y kubectl
+```
+
+Чтобы получить учетные данные для подключения к публичному IP-адресу кластера через интернет, выполним команду:
+```
+yc managed-kubernetes cluster \
+   get-credentials k8s-lab \
+   --external
+```
+
+Добавить в конфиг файл ~/.kube/config:
+```
+yc managed-kubernetes cluster get-credentials --id cat9hb288obvkdtaf1u6 --external --force
+```
+
+
+
+
+
+
