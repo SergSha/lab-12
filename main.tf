@@ -26,7 +26,7 @@ resource "yandex_kubernetes_cluster" "k8s-lab" {
       subnet_id = yandex_vpc_subnet.labsubnet.id
     }
     public_ip = true
-    security_group_ids = [yandex_vpc_security_group.k8s-public-services.id]
+    #security_group_ids = [yandex_vpc_security_group.k8s-public-services.id]
   }
   service_account_id      = yandex_iam_service_account.sergsha.id
   node_service_account_id = yandex_iam_service_account.sergsha.id
@@ -89,7 +89,7 @@ resource "yandex_resourcemanager_folder_iam_member" "viewer" {
   role      = "viewer"
   member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
 }
-
+/*
 resource "yandex_vpc_security_group" "k8s-public-services" {
   name        = "k8s-public-services"
   description = "Правила группы разрешают подключение к сервисам из интернета. Примените правила только для групп узлов."
@@ -135,7 +135,7 @@ resource "yandex_vpc_security_group" "k8s-public-services" {
     to_port           = 65535
   }
 }
-
+*/
 resource "yandex_kubernetes_node_group" "lab_node_group" {
   cluster_id  = "${yandex_kubernetes_cluster.k8s-lab.id}"
   name        = "lab-node-group"
@@ -174,8 +174,13 @@ resource "yandex_kubernetes_node_group" "lab_node_group" {
   }
 
   scale_policy {
-    fixed_scale {
-      size = 1
+    #fixed_scale {
+    #  size = 1
+    #}
+    auto_scale {
+      min     = 1
+      max     = 2
+      initial = 1
     }
   }
 
@@ -191,13 +196,13 @@ resource "yandex_kubernetes_node_group" "lab_node_group" {
 
     maintenance_window {
       day        = "monday"
-      start_time = "15:00"
+      start_time = "21:00"
       duration   = "3h"
     }
 
     maintenance_window {
       day        = "friday"
-      start_time = "10:00"
+      start_time = "21:00"
       duration   = "4h30m"
     }
   }

@@ -102,12 +102,55 @@ yc managed-kubernetes cluster \
    --external
 ```
 
+```
+[user@redos lab-12]$ yc managed-kubernetes cluster \
+   get-credentials k8s-lab \
+   --external
+
+Context 'yc-k8s-lab' was added as default to kubeconfig '/home/user/.kube/config'.
+Check connection to cluster using 'kubectl cluster-info --kubeconfig /home/user/.kube/config'.
+
+Note, that authentication depends on 'yc' and its config profile 'tfadmin'.
+To access clusters using the Kubernetes API, please use Kubernetes Service Account.
+[user@redos lab-12]$
+```
+
 Добавить в конфиг файл ~/.kube/config:
 ```
 yc managed-kubernetes cluster get-credentials --id cat9hb288obvkdtaf1u6 --external --force
 ```
 
-
+```
+[user@redos lab-12]$ kubectl api-versions
+admissionregistration.k8s.io/v1
+apiextensions.k8s.io/v1
+apiregistration.k8s.io/v1
+apps/v1
+authentication.k8s.io/v1
+authorization.k8s.io/v1
+autoscaling/v1
+autoscaling/v2
+autoscaling/v2beta2
+batch/v1
+certificates.k8s.io/v1
+coordination.k8s.io/v1
+discovery.k8s.io/v1
+events.k8s.io/v1
+flowcontrol.apiserver.k8s.io/v1beta1
+flowcontrol.apiserver.k8s.io/v1beta2
+metrics.k8s.io/v1beta1
+networking.k8s.io/v1
+node.k8s.io/v1
+policy/v1
+rbac.authorization.k8s.io/v1
+scheduling.k8s.io/v1
+snapshot.storage.k8s.io/v1
+snapshot.storage.k8s.io/v1beta1
+storage.k8s.io/v1
+storage.k8s.io/v1beta1
+v1
+[user@redos lab-12]$
+```
 
 
 
