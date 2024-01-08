@@ -1,5 +1,5 @@
 # lab-12
-otus | k8s
+otus | kubernetes
 
 ### Домашнее задание
 деплой в k8s
@@ -155,3 +155,150 @@ v1
 
 
 
+
+
+
+
+
+yc managed-kubernetes cluster get-credentials k8s-lab --external
+
+yc managed-kubernetes cluster get-credentials ${self.name} --external --force --kubeconfig ../charts/kube-config
+
+helm upgrade --install ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx --create-namespace --kubeconfig='./kube-config'
+  
+  "https://kubernetes.github.io/ingress-nginx"
+
+helm install percona ./Charts/percona/ -f ./Charts/values.yaml \
+  --kubeconfig='./kube-config'
+
+helm install wordpress ./Charts/wordpress/ -f ./Charts/values.yaml \
+  --kubeconfig='./kube-config'
+
+
+
+
+
+
+
+
+
+
+[user@rocky9 lab-12]$ yc managed-kubernetes cluster get-credentials k8s-lab --external
+
+Context 'yc-k8s-lab' was added as default to kubeconfig '/home/user/.kube/config'.
+Check connection to cluster using 'kubectl cluster-info --kubeconfig /home/user/.kube/config'.
+
+Note, that authentication depends on 'yc' and its config profile 'default'.
+To access clusters using the Kubernetes API, please use Kubernetes Service Account.
+There is a new yc version '0.115.0' available. Current version: '0.113.0'.
+See release notes at https://cloud.yandex.ru/docs/cli/release-notes
+You can install it by running the following command in your shell:
+	$ yc components update
+
+[user@rocky9 lab-12]$ kubectl get nodes
+NAME                        STATUS   ROLES    AGE   VERSION
+cl1aihlvbhor3hnnack0-anew   Ready    <none>   23m   v1.25.4
+[user@rocky9 lab-12]$ 
+
+
+
+[user@rocky9 lab-12]$ helm upgrade --install ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx --create-namespace
+Release "ingress-nginx" does not exist. Installing it now.
+NAME: ingress-nginx
+LAST DEPLOYED: Mon Jan  8 16:07:43 2024
+NAMESPACE: ingress-nginx
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+The ingress-nginx controller has been installed.
+It may take a few minutes for the load balancer IP to be available.
+You can watch the status by running 'kubectl get service --namespace ingress-nginx ingress-nginx-controller --output wide --watch'
+
+An example Ingress that makes use of the controller:
+  apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    name: example
+    namespace: foo
+  spec:
+    ingressClassName: nginx
+    rules:
+      - host: www.example.com
+        http:
+          paths:
+            - pathType: Prefix
+              backend:
+                service:
+                  name: exampleService
+                  port:
+                    number: 80
+              path: /
+    # This section is only required if TLS is to be enabled for the Ingress
+    tls:
+      - hosts:
+        - www.example.com
+        secretName: example-tls
+
+If TLS is enabled for the Ingress, a Secret containing the certificate and key must also be provided:
+
+  apiVersion: v1
+  kind: Secret
+  metadata:
+    name: example-tls
+    namespace: foo
+  data:
+    tls.crt: <base64 encoded cert>
+    tls.key: <base64 encoded key>
+  type: kubernetes.io/tls
+[user@rocky9 lab-12]$ 
+
+
+
+
+
+[user@rocky9 lab-12]$ cat ~/.kube/config 
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM1ekNDQWMrZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJME1ERXdPREV5TXpFME1Wb1hEVE0wTURFd05URXlNekUwTVZvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTFgzCkY4RExtanFYMWh6K1dONk1TTlAyVXBPUDM1Sy9zMmM4dWlodjV2enQ2cytBNURnQ3ZEK3lqS1grYXdXczJDL1YKVmtVLytiSHdBNEtnU0RMdzhybWZ0WGRURm55d1VycEhFbnRwWFl4dUtyVVp0WVNXYk5GZnRXRy9taVRMN2IwTApkVGxxYnZoTDFCNEdKcTczbGVvUzhIc3VMOTFkL3RkN21PWHhWUWJXNW1Na3ZVbTBEUDM5UkZUSVhhVTRTb0JSClZ3N2dVRTZrd1lPOERxb2VFVkR2VUYwN3NkaUdVQzI3ZkZUTjZUenRMRGwzWlRmYnR5WGZhQjVQT1RHYnBvU0gKdTczbDRZNDA3UU9PM092dlVVbzd4VmszVTRveHRqaHlQM1FiUmdoSERsTVZWZXpSSUVyZHRFQTNOVHh4cTRuLwo0VmxDeG1BYXVQL3JFWTk5dnljQ0F3RUFBYU5DTUVBd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZFZU1zQSsrck1FZ3dsTm92THdFY1RSZk5IdWhNQTBHQ1NxR1NJYjMKRFFFQkN3VUFBNElCQVFCSVRWVkZnK0JEMDE3WXMvdk96YVhXRnA4TmZLS0k2NG9MbzhDUkdKTEc5eStSRUdxYQpkNlNOZnE2aDAybFZyY1RKR2J5WjlhL3JXelR0Wjg0ZkFLV2dBNHN1cm13eXZ6d2JuaEJjWG9wR0loSVY3TFFOCnphZzkzUjBCbUNrei8vZXpmU0s2TFkvQklFZmltMUlsa0RReXlBZk1IcERsKzRYWGFiRkp6emlqV3I3MGZ6d3gKWWlEQ0NubTVaUjZiaTkwNGw1R3VmeXRTcXhqNExXRU50dTg1dlFNZ1E2Ym96c2RkbU5hdFdka0hQay9waXViMQpCN0ROSEZ6VzF3NzdZcVdqMkhnRGlBazBHdjFyam5JMEVSUENySG9hVTV5a2ZMdjBzZWozbm92ZWtXNjFwR3NDClhNemxDWGVKeGFIQTExclVOakpQTFk4bXRvcDhTMVVTVlpDbQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    server: https://158.160.6.183
+  name: yc-managed-k8s-catac9t0isbujgbo11do
+contexts:
+- context:
+    cluster: yc-managed-k8s-catac9t0isbujgbo11do
+    user: yc-managed-k8s-catac9t0isbujgbo11do
+  name: yc-k8s-lab
+current-context: yc-k8s-lab
+kind: Config
+preferences: {}
+users:
+- name: yc-managed-k8s-catac9t0isbujgbo11do
+  user:
+    exec:
+      apiVersion: client.authentication.k8s.io/v1beta1
+      args:
+      - k8s
+      - create-token
+      - --profile=default
+      command: /home/user/yandex-cloud/bin/yc
+      env: null
+      provideClusterInfo: false
+[user@rocky9 lab-12]$ 
+
+
+
+
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -f ../charts/kube-config"
+  }
+
+  provisioner "local-exec" {
+    command = "yc managed-kubernetes cluster get-credentials ${self.name} --external --force --kubeconfig ../charts/kube-config"
+  }

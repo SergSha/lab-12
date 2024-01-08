@@ -31,12 +31,22 @@ resource "yandex_kubernetes_cluster" "k8s-lab" {
   service_account_id      = yandex_iam_service_account.sergsha.id
   node_service_account_id = yandex_iam_service_account.sergsha.id
   depends_on = [
-    yandex_resourcemanager_folder_iam_member.k8s-clusters-agent,
-    yandex_resourcemanager_folder_iam_member.vpc-public-admin,
-    yandex_resourcemanager_folder_iam_member.images-puller
+    yandex_resourcemanager_folder_iam_member.editor,
+    #yandex_resourcemanager_folder_iam_member.k8s-clusters-agent,
+    #yandex_resourcemanager_folder_iam_member.vpc-public-admin,
+    #yandex_resourcemanager_folder_iam_member.images-puller,
   ]
-  kms_provider {
-    key_id = yandex_kms_symmetric_key.kms-key.id
+  #kms_provider {
+  #  key_id = yandex_kms_symmetric_key.kms-key.id
+  #}
+  #provisioner "local-exec" {
+  #  when    = destroy
+  #  #command = "rm -f ./kube-config"
+  #  command = "kubectl config delete-cluster k8s-lab"
+  #}
+  provisioner "local-exec" {
+    #command = "yc managed-kubernetes cluster get-credentials k8s-lab --external --force --kubeconfig ./kube-config"
+    command = "yc managed-kubernetes cluster get-credentials k8s-lab --external"
   }
 }
 
@@ -56,6 +66,13 @@ resource "yandex_iam_service_account" "sergsha" {
   description = "K8S zonal service account"
 }
 
+resource "yandex_resourcemanager_folder_iam_member" "editor" {
+  # Сервисному аккаунту назначается роль "editor".
+  folder_id = var.folder_id
+  role      = "editor"
+  member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
+}
+/*
 resource "yandex_resourcemanager_folder_iam_member" "k8s-clusters-agent" {
   # Сервисному аккаунту назначается роль "k8s.clusters.agent".
   folder_id = var.folder_id
@@ -77,6 +94,12 @@ resource "yandex_resourcemanager_folder_iam_member" "images-puller" {
   member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
 }
 
+resource "yandex_resourcemanager_folder_iam_member" "viewer" {
+  folder_id = var.folder_id
+  role      = "viewer"
+  member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
+}
+
 resource "yandex_kms_symmetric_key" "kms-key" {
   # Ключ для шифрования важной информации, такой как пароли, OAuth-токены и SSH-ключи.
   name              = "kms-key"
@@ -84,12 +107,6 @@ resource "yandex_kms_symmetric_key" "kms-key" {
   rotation_period   = "8760h" # 1 год.
 }
 
-resource "yandex_resourcemanager_folder_iam_member" "viewer" {
-  folder_id = var.folder_id
-  role      = "viewer"
-  member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
-}
-/*
 resource "yandex_vpc_security_group" "k8s-public-services" {
   name        = "k8s-public-services"
   description = "Правила группы разрешают подключение к сервисам из интернета. Примените правила только для групп узлов."
@@ -150,18 +167,19 @@ resource "yandex_kubernetes_node_group" "lab_node_group" {
     platform_id = "standard-v3"
 
     network_interface {
-      nat                = true
+      nat                = false
       subnet_ids         = ["${yandex_vpc_subnet.labsubnet.id}"]
     }
 
     resources {
-      memory = 2
-      cores  = 2
+      memory        = 4
+      cores         = 2
+      core_fraction = 50
     }
 
     boot_disk {
-      type = "network-hdd"
-      size = 32
+      type = "network-ssd"
+      size = 64
     }
 
     scheduling_policy {
