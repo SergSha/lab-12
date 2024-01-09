@@ -72,11 +72,11 @@ Outputs:
 Список kubernetes кластеров:
 ```
 [user@redos lab-12]$ yc managed-kubernetes cluster list
-+----------------------+---------+---------------------+---------+---------+------------------------+---------------------+
-|          ID          |  NAME   |     CREATED AT      | HEALTH  | STATUS  |   EXTERNAL ENDPOINT    |  INTERNAL ENDPOINT  |
-+----------------------+---------+---------------------+---------+---------+------------------------+---------------------+
-| catsn44eokd4kqbc0apg | k8s-lab | 2023-12-18 07:47:40 | HEALTHY | RUNNING | https://158.160.25.182 | https://10.10.10.22 |
-+----------------------+---------+---------------------+---------+---------+------------------------+---------------------+
++----------------------+---------+---------------------+---------+---------+------------------------+-------------------+
+|          ID          |  NAME   |     CREATED AT      | HEALTH  | STATUS  |   EXTERNAL ENDPOINT    | INTERNAL ENDPOINT |
++----------------------+---------+---------------------+---------+---------+------------------------+-------------------+
+| catpf5mghphu27eqbj23 | k8s-lab | 2024-01-09 05:48:20 | HEALTHY | RUNNING | https://84.252.140.202 | https://10.1.0.22 |
++----------------------+---------+---------------------+---------+---------+------------------------+-------------------+
 
 [user@redos lab-12]$ 
 ```
@@ -95,86 +95,36 @@ EOF
 sudo dnf install -y kubectl
 ```
 
-Чтобы получить учетные данные для подключения к публичному IP-адресу кластера через интернет, выполним команду:
-```
-yc managed-kubernetes cluster \
-   get-credentials k8s-lab \
-   --external
-```
 
+Установим helm:
 ```
-[user@redos lab-12]$ yc managed-kubernetes cluster \
-   get-credentials k8s-lab \
-   --external
-
-Context 'yc-k8s-lab' was added as default to kubeconfig '/home/user/.kube/config'.
-Check connection to cluster using 'kubectl cluster-info --kubeconfig /home/user/.kube/config'.
-
-Note, that authentication depends on 'yc' and its config profile 'tfadmin'.
-To access clusters using the Kubernetes API, please use Kubernetes Service Account.
-[user@redos lab-12]$
+curl -LO https://get.helm.sh/helm-v3.13.3-linux-amd64.tar.gz
+tar -xf ./helm-v3.13.3-linux-amd64.tar.gz
+sudo mv ./linux-amd64/helm /usr/local/bin/
+rm -rf ./helm-v3.13.3-linux-amd64.tar.gz ./linux-amd64/
 ```
 
-Добавить в конфиг файл ~/.kube/config:
+# Установим contour ingress:
 ```
-yc managed-kubernetes cluster get-credentials --id cat9hb288obvkdtaf1u6 --external --force
-```
-
-```
-[user@redos lab-12]$ kubectl api-versions
-admissionregistration.k8s.io/v1
-apiextensions.k8s.io/v1
-apiregistration.k8s.io/v1
-apps/v1
-authentication.k8s.io/v1
-authorization.k8s.io/v1
-autoscaling/v1
-autoscaling/v2
-autoscaling/v2beta2
-batch/v1
-certificates.k8s.io/v1
-coordination.k8s.io/v1
-discovery.k8s.io/v1
-events.k8s.io/v1
-flowcontrol.apiserver.k8s.io/v1beta1
-flowcontrol.apiserver.k8s.io/v1beta2
-metrics.k8s.io/v1beta1
-networking.k8s.io/v1
-node.k8s.io/v1
-policy/v1
-rbac.authorization.k8s.io/v1
-scheduling.k8s.io/v1
-snapshot.storage.k8s.io/v1
-snapshot.storage.k8s.io/v1beta1
-storage.k8s.io/v1
-storage.k8s.io/v1beta1
-v1
-[user@redos lab-12]$
+kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 ```
 
+#Установим ingress-nginx:
+#```
+#helm upgrade --install ingress-nginx ingress-nginx \
+#  --repo https://kubernetes.github.io/ingress-nginx \
+#  --namespace ingress-nginx --create-namespace
+#```
 
+Установим mysql:
+```
+helm upgrade --install percona ./Charts/percona/ -f ./Charts/values.yaml
+```
 
-
-
-
-
-
-
-yc managed-kubernetes cluster get-credentials k8s-lab --external
-
-yc managed-kubernetes cluster get-credentials ${self.name} --external --force --kubeconfig ../charts/kube-config
-
-helm upgrade --install ingress-nginx ingress-nginx \
-  --repo https://kubernetes.github.io/ingress-nginx \
-  --namespace ingress-nginx --create-namespace --kubeconfig='./kube-config'
-  
-  "https://kubernetes.github.io/ingress-nginx"
-
-helm install percona ./Charts/percona/ -f ./Charts/values.yaml \
-  --kubeconfig='./kube-config'
-
-helm install wordpress ./Charts/wordpress/ -f ./Charts/values.yaml \
-  --kubeconfig='./kube-config'
+Установим wordpress:
+```
+helm upgrade --install wordpress ./Charts/wordpress/ -f ./Charts/values.yaml
+```
 
 
 

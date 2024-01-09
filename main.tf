@@ -1,7 +1,7 @@
 locals {
   #k8s_version = "1.22"
   sa_name     = "sergsha"
-  vpc_name        = "labnet"
+  vpc_name    = "labnet"
 
   folders = {
     "labfolder" = {}
@@ -39,14 +39,16 @@ resource "yandex_kubernetes_cluster" "k8s-lab" {
   #kms_provider {
   #  key_id = yandex_kms_symmetric_key.kms-key.id
   #}
-  #provisioner "local-exec" {
-  #  when    = destroy
-  #  #command = "rm -f ./kube-config"
-  #  command = "kubectl config delete-cluster k8s-lab"
-  #}
   provisioner "local-exec" {
-    #command = "yc managed-kubernetes cluster get-credentials k8s-lab --external --force --kubeconfig ./kube-config"
-    command = "yc managed-kubernetes cluster get-credentials k8s-lab --external"
+    when    = destroy
+    command = <<-EOT
+      kubectl config delete-context yc-k8s-lab
+      kubectl config delete-cluster yc-managed-k8s-${self.id}
+      kubectl config delete-user yc-managed-k8s-${self.id}
+    EOT
+  }
+  provisioner "local-exec" {
+    command = "yc managed-kubernetes cluster get-credentials ${self.id} --external"
   }
 }
 
@@ -59,6 +61,22 @@ resource "yandex_vpc_subnet" "labsubnet" {
   v4_cidr_blocks = local.subnet_cidrs
   zone           = var.zone
   network_id     = yandex_vpc_network.labnet.id
+  route_table_id = yandex_vpc_route_table.rt.id
+}
+
+resource "yandex_vpc_gateway" "nat_gateway" {
+  name = "default-gateway"
+  shared_egress_gateway {}
+}
+
+resource "yandex_vpc_route_table" "rt" {
+  name       = "main-route-table"
+  network_id = yandex_vpc_network.labnet.id
+
+  static_route {
+    destination_prefix = "0.0.0.0/0"
+    gateway_id         = yandex_vpc_gateway.nat_gateway.id
+  }
 }
 
 resource "yandex_iam_service_account" "sergsha" {

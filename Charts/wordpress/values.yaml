@@ -6,7 +6,6 @@ replicaCount: 1
 
 image:
   repository: wordpress
-  pullPolicy: IfNotPresent
   tag: "php8.3"
 
 service:
@@ -15,7 +14,7 @@ service:
 
 ingress:
   enabled: true
-  className: "nginx"
+  className: contour
   hosts:
     - host: www.sergsha.site
       paths:
