@@ -1,4 +1,4 @@
-# Default values for Chart-Percona.
+# Default values for Chart-mysql.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -22,11 +22,11 @@ autoscaling:
 
 # Additional volumes on the output Deployment definition.
 volumes:
-  - name: percona-db-path
+  - name: mysql-db-path
     persistentVolumeClaim:
       claimName: pvc-hdd
 
 # Additional volumeMounts on the output Deployment definition.
 volumeMounts:
-  - name: percona-db-path
+  - name: mysql-db-path
     mountPath: "/var/lib/mysql"

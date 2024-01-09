@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}-svc
   labels:
-    app: percona
+    app: mysql
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: mysql
   selector:
-    app: percona
+    app: mysql

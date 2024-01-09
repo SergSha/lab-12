@@ -3,18 +3,18 @@ kind: Deployment
 metadata:
   name: {{ .Release.Name }}-deployment
   labels:
-    app: percona
+    app: mysql
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      app: percona
+      app: mysql
   template:
     metadata:
       labels:
-        app: percona
+        app: mysql
     spec:
       containers:
         - name: {{ .Release.Name }}

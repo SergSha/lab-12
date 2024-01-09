@@ -1,5 +1,5 @@
 locals {
-  #k8s_version = "1.22"
+  k8s_version = "1.25"
   sa_name     = "sergsha"
   vpc_name    = "labnet"
 
@@ -15,12 +15,19 @@ locals {
   subnet_name  = "labsubnet"
 }
 
+resource "yandex_resourcemanager_folder" "folders" {
+  for_each = local.folders
+  name     = each.key
+  cloud_id = var.cloud_id
+}
+
 resource "yandex_kubernetes_cluster" "k8s-lab" {
   name        = "k8s-lab"
   description = "My Kubernetes Cluster"
+  folder_id   = yandex_resourcemanager_folder.folders["labfolder"].id
   network_id  = yandex_vpc_network.labnet.id
   master {
-    #version = local.k8s_version
+    version = local.k8s_version
     zonal {
       zone      = yandex_vpc_subnet.labsubnet.zone
       subnet_id = yandex_vpc_subnet.labsubnet.id
@@ -53,11 +60,13 @@ resource "yandex_kubernetes_cluster" "k8s-lab" {
 }
 
 resource "yandex_vpc_network" "labnet" {
-  name = local.vpc_name
+  name      = local.vpc_name
+  folder_id = yandex_resourcemanager_folder.folders["labfolder"].id
 }
 
 resource "yandex_vpc_subnet" "labsubnet" {
-  name = local.subnet_name
+  name           = local.subnet_name
+  folder_id      = yandex_resourcemanager_folder.folders["labfolder"].id
   v4_cidr_blocks = local.subnet_cidrs
   zone           = var.zone
   network_id     = yandex_vpc_network.labnet.id
@@ -65,12 +74,14 @@ resource "yandex_vpc_subnet" "labsubnet" {
 }
 
 resource "yandex_vpc_gateway" "nat_gateway" {
-  name = "default-gateway"
+  name      = "default-gateway"
+  folder_id = yandex_resourcemanager_folder.folders["labfolder"].id
   shared_egress_gateway {}
 }
 
 resource "yandex_vpc_route_table" "rt" {
   name       = "main-route-table"
+  folder_id  = yandex_resourcemanager_folder.folders["labfolder"].id
   network_id = yandex_vpc_network.labnet.id
 
   static_route {
@@ -82,38 +93,39 @@ resource "yandex_vpc_route_table" "rt" {
 resource "yandex_iam_service_account" "sergsha" {
   name        = local.sa_name
   description = "K8S zonal service account"
+  folder_id  = yandex_resourcemanager_folder.folders["labfolder"].id
 }
 
 resource "yandex_resourcemanager_folder_iam_member" "editor" {
   # Сервисному аккаунту назначается роль "editor".
-  folder_id = var.folder_id
+  folder_id = yandex_resourcemanager_folder.folders["labfolder"].id
   role      = "editor"
   member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
 }
 /*
 resource "yandex_resourcemanager_folder_iam_member" "k8s-clusters-agent" {
   # Сервисному аккаунту назначается роль "k8s.clusters.agent".
-  folder_id = var.folder_id
+  folder_id = yandex_resourcemanager_folder.folders["labfolder"].id
   role      = "k8s.clusters.agent"
   member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
 }
 
 resource "yandex_resourcemanager_folder_iam_member" "vpc-public-admin" {
   # Сервисному аккаунту назначается роль "vpc.publicAdmin".
-  folder_id = var.folder_id
+  folder_id = yandex_resourcemanager_folder.folders["labfolder"].id
   role      = "vpc.publicAdmin"
   member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
 }
 
 resource "yandex_resourcemanager_folder_iam_member" "images-puller" {
   # Сервисному аккаунту назначается роль "container-registry.images.puller".
-  folder_id = var.folder_id
+  folder_id = yandex_resourcemanager_folder.folders["labfolder"].id
   role      = "container-registry.images.puller"
   member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
 }
 
 resource "yandex_resourcemanager_folder_iam_member" "viewer" {
-  folder_id = var.folder_id
+  folder_id = yandex_resourcemanager_folder.folders["labfolder"].id
   role      = "viewer"
   member    = "serviceAccount:${yandex_iam_service_account.sergsha.id}"
 }
@@ -124,7 +136,7 @@ resource "yandex_kms_symmetric_key" "kms-key" {
   default_algorithm = "AES_128"
   rotation_period   = "8760h" # 1 год.
 }
-
+*/
 resource "yandex_vpc_security_group" "k8s-public-services" {
   name        = "k8s-public-services"
   description = "Правила группы разрешают подключение к сервисам из интернета. Примените правила только для групп узлов."
@@ -162,6 +174,12 @@ resource "yandex_vpc_security_group" "k8s-public-services" {
     from_port         = 30000
     to_port           = 32767
   }
+  ingress {
+    protocol          = "TCP"
+    description       = "Правило разрешает входящий трафик из интернета на 80 порт для доступа к веб-странице WordPress. Добавьте или измените порты на нужные вам."
+    v4_cidr_blocks    = ["0.0.0.0/0"]
+    port              = 80
+  }
   egress {
     protocol          = "ANY"
     description       = "Правило разрешает весь исходящий трафик. Узлы могут связаться с Yandex Container Registry, Yandex Object Storage, Docker Hub и т. д."
@@ -170,12 +188,12 @@ resource "yandex_vpc_security_group" "k8s-public-services" {
     to_port           = 65535
   }
 }
-*/
+
 resource "yandex_kubernetes_node_group" "lab_node_group" {
   cluster_id  = "${yandex_kubernetes_cluster.k8s-lab.id}"
   name        = "lab-node-group"
   description = "description"
-  #version     = local.k8s_version
+  version     = local.k8s_version
 
   labels = {
     "key" = "value"
@@ -211,12 +229,12 @@ resource "yandex_kubernetes_node_group" "lab_node_group" {
 
   scale_policy {
     #fixed_scale {
-    #  size = 1
+    #  size = 3
     #}
     auto_scale {
-      min     = 1
-      max     = 2
-      initial = 1
+      min     = 2
+      max     = 4
+      initial = 2
     }
   }
 
