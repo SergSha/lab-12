@@ -63,11 +63,7 @@ ssh_private_key = "~/.ssh/id_rsa"
 terraform init && terraform apply -auto-approve
 ```
 
-По завершению команды получим данные outputs:
-```
-Outputs:
-
-
+По завершению команды получим данные:
 
 Список kubernetes кластеров:
 ```
