@@ -100,17 +100,17 @@ sudo mv ./linux-amd64/helm /usr/local/bin/
 rm -rf ./helm-v3.13.3-linux-amd64.tar.gz ./linux-amd64/
 ```
 
-# Установим contour ingress:
+Установим contour ingress:
 ```
 kubectl apply -f https://projectcontour.io/quickstart/contour.yaml
 ```
 
-#Установим ingress-nginx:
-#```
-#helm upgrade --install ingress-nginx ingress-nginx \
-#  --repo https://kubernetes.github.io/ingress-nginx \
-#  --namespace ingress-nginx --create-namespace
-#```
+Установим ingress-nginx:
+```
+helm upgrade --install ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx --create-namespace
+```
 
 Установим mysql:
 ```
