@@ -33,7 +33,7 @@ resource "yandex_kubernetes_cluster" "k8s-lab" {
       subnet_id = yandex_vpc_subnet.labsubnet.id
     }
     public_ip = true
-    #security_group_ids = [yandex_vpc_security_group.k8s-public-services.id]
+    security_group_ids = [yandex_vpc_security_group.k8s-public-services.id]
   }
   service_account_id      = yandex_iam_service_account.sergsha.id
   node_service_account_id = yandex_iam_service_account.sergsha.id
@@ -140,6 +140,7 @@ resource "yandex_kms_symmetric_key" "kms-key" {
 resource "yandex_vpc_security_group" "k8s-public-services" {
   name        = "k8s-public-services"
   description = "Правила группы разрешают подключение к сервисам из интернета. Примените правила только для групп узлов."
+  folder_id = yandex_resourcemanager_folder.folders["labfolder"].id
   network_id  = yandex_vpc_network.labnet.id
   ingress {
     protocol          = "TCP"
@@ -175,10 +176,16 @@ resource "yandex_vpc_security_group" "k8s-public-services" {
     to_port           = 32767
   }
   ingress {
-    protocol          = "TCP"
+    protocol          = "ANY"
     description       = "Правило разрешает входящий трафик из интернета на 80 порт для доступа к веб-странице WordPress. Добавьте или измените порты на нужные вам."
     v4_cidr_blocks    = ["0.0.0.0/0"]
     port              = 80
+  }
+  ingress {
+    protocol          = "ANY"
+    description       = "Правило разрешает входящий трафик из интернета на 443 порт для доступа к веб-странице WordPress. Добавьте или измените порты на нужные вам."
+    v4_cidr_blocks    = ["0.0.0.0/0"]
+    port              = 443
   }
   egress {
     protocol          = "ANY"
